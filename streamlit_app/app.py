@@ -8,8 +8,7 @@ import json
 import os
 import time
 from datetime import datetime
-
-import pandas as pd
+import csv
 import streamlit as st
 
 # Configure Streamlit page for premium presentation
@@ -329,7 +328,6 @@ with tabs[2]:
     m4.metric("Languages Active", len(summary.get("language_distribution", {})))
 
     if tracker.interactions:
-        df = pd.DataFrame(tracker.interactions)
         display_cols = [
             "interaction_id",
             "timestamp_utc",
@@ -339,13 +337,27 @@ with tabs[2]:
             "total_latency_seconds",
             "user_id",
         ]
-        available_cols = [c for c in display_cols if c in df.columns]
-        st.dataframe(df[available_cols], use_container_width=True)
+        table_data = [
+            {col: item.get(col, "") for col in display_cols}
+            for item in tracker.interactions
+        ]
+        st.dataframe(table_data, use_container_width=True)
 
         # Download Buttons for Submission Dossier
         d_col1, d_col2 = st.columns(2)
         with d_col1:
-            csv_data = df.to_csv(index=False).encode("utf-8")
+            csv_path = os.path.join("evaluation", "results", "ps2_interactions.csv")
+            if os.path.exists(csv_path):
+                with open(csv_path, "rb") as f:
+                    csv_data = f.read()
+            else:
+                import io
+                buf = io.StringIO()
+                writer = csv.DictWriter(buf, fieldnames=list(tracker.interactions[0].keys()))
+                writer.writeheader()
+                writer.writerows(tracker.interactions)
+                csv_data = buf.getvalue().encode("utf-8")
+
             st.download_button(
                 "📥 Download Dossier (CSV)",
                 data=csv_data,
