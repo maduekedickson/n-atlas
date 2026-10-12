@@ -1,0 +1,59 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# Virtual Environments
+.venv/
+env/
+venv/
+ENV/
+
+# Environment Variables
+.env
+*.env.local
+
+# Model weights & Checkpoints (large files)
+*.bin
+*.pt
+*.pth
+*.safetensors
+!adapter_config.json
+checkpoints/
+cached_models/
+model_weights/
+
+# Datasets raw downloads
+data/raw/*
+!data/raw/.gitkeep
+data/interim/*
+!data/interim/.gitkeep
+
+# IDE & OS
+.vscode/
+.idea/
+*.swp
+*.swo
+.DS_Store
+Thumbs.db
+.agents/
+
+# Jupyter Checkpoints
+.ipynb_checkpoints/

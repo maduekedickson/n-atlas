@@ -1,0 +1,39 @@
+# Python dependencies for NAIC 2026 N-ATLaS Innovation Project
+
+# Core ML and Foundation Model
+torch>=2.2.0
+transformers>=4.40.0
+accelerate>=0.29.0
+peft>=0.10.0
+datasets>=2.18.0
+bitsandbytes>=0.43.0
+sentencepiece>=0.2.0
+safetensors>=0.4.2
+
+# API Backend
+fastapi>=0.110.0
+uvicorn[standard]>=0.29.0
+pydantic>=2.7.0
+python-multipart>=0.0.9
+
+# User Interface
+streamlit>=1.33.0
+
+# Voice & Speech Recognition (PS2)
+soundfile>=0.12.0
+jiwer>=3.0.0
+gTTS>=2.5.0
+rapidfuzz>=3.0.0
+
+# Data Science & Benchmarking
+pandas>=2.2.0
+numpy>=1.26.0
+scikit-learn>=1.4.0
+matplotlib>=3.8.0
+
+# Utilities & Testing
+psutil>=5.9.0
+python-dotenv>=1.0.1
+requests>=2.31.0
+pytest>=8.1.0
+httpx>=0.27.0
