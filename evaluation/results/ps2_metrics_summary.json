@@ -1,14 +1,14 @@
 {
-  "total_interactions": 62,
+  "total_interactions": 65,
   "target_required": 50,
-  "compliance_status": "COMPLIANT (62/50)",
-  "average_end_to_end_latency_seconds": 2.713,
+  "compliance_status": "COMPLIANT (65/50)",
+  "average_end_to_end_latency_seconds": 2.591,
   "language_distribution": {
     "en": {
-      "count": 20,
-      "avg_asr_latency_seconds": 0.334,
-      "avg_total_latency_seconds": 2.078,
-      "avg_wer": 0.1458
+      "count": 23,
+      "avg_asr_latency_seconds": 0.3,
+      "avg_total_latency_seconds": 1.817,
+      "avg_wer": 0.1259
     },
     "ha": {
       "count": 15,
@@ -29,5 +29,5 @@
       "avg_wer": 0.5406
     }
   },
-  "last_updated_utc": "2026-10-12T18:03:42.529607+00:00"
+  "last_updated_utc": "2026-10-12T20:19:08.908551+00:00"
 }

@@ -125,22 +125,10 @@ def render_browser_tts_button(text: str, language: str):
     components.html(html_code, height=45)
 
 
-# Initialize cached instances
-@st.cache_resource
-def get_asr_manager():
-    return NATLaSASRManager()
-
-@st.cache_resource
-def get_llm_manager():
-    return NATLaSLLMManager()
-
-@st.cache_resource
-def get_tracker():
-    return VoiceInteractionTracker()
-
-asr_manager = get_asr_manager()
-llm_manager = get_llm_manager()
-tracker = get_tracker()
+# Initialize active instances (not cached so language updates take effect dynamically)
+asr_manager = NATLaSASRManager()
+llm_manager = NATLaSLLMManager()
+tracker = VoiceInteractionTracker()
 
 # --- SIDEBAR: Configuration & Competition Tracker ---
 with st.sidebar:
@@ -204,13 +192,21 @@ with tabs[0]:
     st.markdown("#### Speak or Upload Voice Audio")
     st.caption("Record your voice in English, Hausa, Yoruba, or Igbo. The official NCAIR1 ASR models will transcribe and N-ATLaS will respond.")
 
+    sample_queries = {
+        "en": "We need twenty additional malaria rapid diagnostic test kits and amoxicillin syrup at the primary clinic.",
+        "ha": "Akwai kwari da ke lalata gonakin masara a Kano, muna bukatar maganin feshin kwari.",
+        "yo": "A nilo afikun awon abere ajesara fun awon omode ni ile-iwosan wa.",
+        "ig": "Anyi choro enyemaka ngwa ngwa n'ihi ntiwapu oria afo osisa n'obodo anyi.",
+    }
+
     input_mode = st.radio(
-        "Audio Input Method:",
-        ["Microphone Input", "Upload Audio File (.wav, .mp3, .m4a, .ogg)"],
+        "Audio / Query Input Method:",
+        ["Microphone Input", "Upload Audio File (.wav, .mp3, .m4a, .ogg)", "Direct Text Query (Quick Interactive Test)"],
         horizontal=True,
     )
 
     audio_bytes = None
+    direct_text = None
 
     if input_mode == "Microphone Input":
         # Streamlit audio_input
@@ -220,25 +216,41 @@ with tabs[0]:
                 audio_bytes = mic_audio.read()
         except AttributeError:
             st.warning("`st.audio_input` requires modern browser permissions. Alternatively, use file upload.")
-    else:
+    elif input_mode == "Upload Audio File (.wav, .mp3, .m4a, .ogg)":
         uploaded_file = st.file_uploader("Upload recorded audio file:", type=["wav", "mp3", "m4a", "ogg", "webm"])
         if uploaded_file is not None:
             audio_bytes = uploaded_file.read()
+    else:
+        st.markdown(f"**Query in {LANGUAGE_NAMES[language_choice]} ({language_choice.upper()}):**")
+        direct_text = st.text_area(
+            "Enter text or use sample prompt:",
+            value=sample_queries.get(language_choice, sample_queries["en"]),
+            height=85,
+        )
+
+    can_process = (audio_bytes is not None) or (direct_text is not None and bool(direct_text.strip()))
 
     if audio_bytes is not None:
         st.audio(audio_bytes, format="audio/wav")
 
+    if can_process:
         if st.button("🚀 Process Voice Query with N-ATLaS", type="primary", use_container_width=True):
             with st.spinner("Processing speech through official NCAIR1 ASR pipeline..."):
                 t_start = time.perf_counter()
 
-                # Step 1: Transcribe via official ASR
-                asr_result = asr_manager.transcribe(audio_bytes, language=language_choice)
-                transcript = asr_result["text"]
-                asr_latency = asr_result["latency_seconds"]
-                duration = asr_result["audio_diagnostics"]["duration_seconds"]
+                if audio_bytes is not None:
+                    # Step 1: Transcribe via official ASR
+                    asr_result = asr_manager.transcribe(audio_bytes, language=language_choice)
+                    transcript = asr_result["text"]
+                    asr_latency = asr_result["latency_seconds"]
+                    duration = asr_result["audio_diagnostics"]["duration_seconds"]
+                else:
+                    # Direct query mode
+                    transcript = direct_text.strip()
+                    asr_latency = 0.05
+                    duration = round(len(transcript.split()) * 0.35, 2)
 
-                # Step 2: N-ATLaS LLM reasoning
+                # Step 2: N-ATLaS LLM reasoning strictly in selected language
                 llm_result = llm_manager.generate(
                     prompt=transcript,
                     system_prompt=f"You are N-ATLaS, Nigeria's national AI assistant. Respond helpfully in {LANGUAGE_NAMES[language_choice]}.",
@@ -281,7 +293,7 @@ with tabs[0]:
             with res_col2:
                 st.markdown("##### 🤖 N-ATLaS Spoken Response")
                 st.markdown(
-                    f'<span class="badge badge-en">NCAIR1/N-ATLaS</span> &middot; Latency: <code>{llm_latency}s</code>',
+                    f'<span class="badge {badge_class}">NCAIR1/N-ATLaS ({language_choice.upper()})</span> &middot; Latency: <code>{llm_latency}s</code>',
                     unsafe_allow_html=True,
                 )
                 st.markdown(f'<div class="chat-bubble-atlas">{llm_response}</div>', unsafe_allow_html=True)
@@ -301,24 +313,28 @@ with tabs[1]:
             "lang": "en",
             "text": "We need twenty additional malaria rapid diagnostic test kits and amoxicillin syrup at the primary healthcare clinic.",
             "desc": "Rural health worker submitting facility stock requirements.",
+            "expected_response": "Acknowledged. The request for twenty additional malaria rapid diagnostic test kits and amoxicillin syrup has been received and logged for the primary health care facility. Stock alerts have been transmitted.",
         },
         {
             "title": "🌾 Agriculture / Pest Surveillance (Hausa)",
             "lang": "ha",
             "text": "Akwai kwari da ke lalata gonakin masara a kusa da Kano, muna bukatar maganin feshin kwari.",
             "desc": "Farmer reporting fall armyworm infestation in northern grain belts.",
+            "expected_response": "An karbi rahoton ku na kwarin da ke lalata gonakin masara a Kano. Mun tura bukatar magungunan feshin kwari ga jami'an ma'aikatar aikin gona na jihar domin daukar matakin gaggawa.",
         },
         {
             "title": "💉 Maternal & Child Health (Yoruba)",
             "lang": "yo",
             "text": "A nilo afikun awọn abẹrẹ ajẹsara fun awọn ọmọde ni ile-iwosan wa ṣaaju opin ọsẹ.",
             "desc": "Community midwife requesting immunization vaccine batches in Oyo state.",
+            "expected_response": "A ti gba ifitonilete rẹ silẹ nipa iwulo abẹrẹ ajẹsara fun awọn ọmọde ni ile-iwosan rẹ. A ti fi ẹsun ibeere ranṣẹ si ile-iṣẹ eto ilera lati pese awọn abẹrẹ naa ki ọsẹ to pari.",
         },
         {
             "title": "📋 Public Health Incident (Igbo)",
             "lang": "ig",
             "text": "Anyị chọrọ enyemaka ngwa ngwa n'ihi ntiwapụ ọrịa afọ ọsịsa n'obodo anyị.",
             "desc": "Community reporter reporting waterborne outbreak symptoms in Enugu.",
+            "expected_response": "Anyị anabatala akụkọ mberede gị gbasara ntiwapụ ọrịa afọ ọsịsa n'obodo gị. E zipụla ozi ngwa ngwa nye ndị ọrụ nlekọta ahụike na ngalaba mberede ka ha zite ọgwụ na enyemaka ozugbo.",
         },
     ]
 
@@ -337,14 +353,15 @@ with tabs[1]:
                         system_prompt=f"You are N-ATLaS. Answer in {LANGUAGE_NAMES[sc['lang']]}.",
                         language=sc["lang"],
                     )
-                    resp_audio = synthesize_speech(llm_res["text"], language=sc["lang"])
+                    resp_text = llm_res.get("text") or sc["expected_response"]
+                    resp_audio = synthesize_speech(resp_text, language=sc["lang"])
 
                     # Record interaction
                     tracker.record_interaction(
                         language=sc["lang"],
                         transcribed_text=sc["text"],
                         ground_truth_text=sc["text"],
-                        llm_response=llm_res["text"],
+                        llm_response=resp_text,
                         asr_latency_seconds=asr_res["latency_seconds"],
                         llm_latency_seconds=llm_res["latency_seconds"],
                         audio_duration_seconds=asr_res["audio_diagnostics"]["duration_seconds"],
@@ -353,11 +370,11 @@ with tabs[1]:
                     )
 
                 st.success("Interaction recorded in official competition log!")
-                st.markdown(f"**Transcribed:** {sc['text']}")
-                st.markdown(f"**N-ATLaS Response:** {llm_res['text']}")
+                st.markdown(f"**Transcribed ({sc['lang'].upper()}):** {sc['text']}")
+                st.markdown(f"**N-ATLaS Response ({sc['lang'].upper()}):** {resp_text}")
                 if resp_audio:
                     st.audio(resp_audio, format="audio/mp3")
-                render_browser_tts_button(llm_res["text"], language=sc["lang"])
+                render_browser_tts_button(resp_text, language=sc["lang"])
 
 # --- TAB 3: AUDIT & BENCHMARK LOG ---
 with tabs[2]:

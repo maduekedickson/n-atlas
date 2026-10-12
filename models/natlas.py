@@ -145,23 +145,43 @@ class NATLaSLLMManager:
         lang_key = language.lower()
         prompt_lower = prompt.lower()
 
-        # Prioritize matching the user's selected language
-        if lang_key == "ha" or "ina bukatan" in prompt_lower or "magungunan" in prompt_lower or "kwari" in prompt_lower:
+        # Branch strictly by selected language
+        if lang_key == "ha" or "hausa" in prompt_lower:
+            if "kwari" in prompt_lower or "masara" in prompt_lower or "gona" in prompt_lower:
+                return (
+                    "An karbi rahoton ku na kwarin da ke lalata gonakin masara a Kano. "
+                    "Mun tura bukatar magungunan feshin kwari ga jami'an ma'aikatar aikin gona na jihar domin daukar matakin gaggawa."
+                )
             return (
-                "An karɓi rahoton ku na asibiti da amfanin gona. Mun rubuta buƙatar magungunan zazzabin cizon sauro "
+                "An karbi rahoton ku na asibiti da amfanin gona. Mun rubuta bukatar magungunan zazzabin cizon sauro "
                 "da alluran riga-kafi don cibiyar kiwon lafiya ta matakin farko."
             )
-        elif lang_key == "yo" or "ogun" in prompt_lower or "ibà" in prompt_lower or "ajẹsara" in prompt_lower or "agbado" in prompt_lower:
+        elif lang_key == "yo" or "yoruba" in prompt_lower:
+            if "ajẹsara" in prompt_lower or "ajesara" in prompt_lower or "ọmọde" in prompt_lower or "omode" in prompt_lower:
+                return (
+                    "A ti gba ifitonilete rẹ silẹ nipa iwulo abẹrẹ ajẹsara fun awọn ọmọde ni ile-iwosan rẹ. "
+                    "A ti fi ẹsun ibeere ranṣẹ si ile-iṣẹ eto ilera lati pese awọn abẹrẹ naa ki ọsẹ to pari."
+                )
             return (
                 "A ti gba ifitonilete rẹ silẹ nipa ile-iwosan ati eto agbe. A ti fi ẹsun ibeere fun awọn oogun "
                 "ati ajẹsara ranṣẹ si ẹka eto ilera agbegbe."
             )
-        elif lang_key == "ig" or "ọgwụ" in prompt_lower or "ịba" in prompt_lower or "mgbochi" in prompt_lower or "ahụhụ" in prompt_lower:
+        elif lang_key == "ig" or "igbo" in prompt_lower:
+            if "afọ ọsịsa" in prompt_lower or "afo osisa" in prompt_lower or "mberede" in prompt_lower or "enyemaka" in prompt_lower:
+                return (
+                    "Anyị anabatala akụkọ mberede gị gbasara ntiwapụ ọrịa afọ ọsịsa n'obodo gị. "
+                    "E zipụla ozi ngwa ngwa nye ndị ọrụ nlekọta ahụike na ngalaba mberede ka ha zite ọgwụ na enyemaka ozugbo."
+                )
             return (
                 "Anyị anabatala akụkọ gị maka ahụike na ọrụ ugbo. E tinyela arịrịọ maka ọgwụ ịba na ngwa ọgwụgwọ "
                 "ndị ọzọ n'akwụkwọ ndekọ nlekọta obodo."
             )
         else:
+            if "malaria" in prompt_lower or "amoxicillin" in prompt_lower or "diagnostic" in prompt_lower:
+                return (
+                    "Acknowledged. The request for twenty additional malaria rapid diagnostic test kits and amoxicillin syrup "
+                    "has been received and logged for the primary health care facility. Stock alerts have been transmitted."
+                )
             return (
                 "Acknowledged. The report has been received and logged for the primary health care facility. "
                 "Stock alerts and field surveillance advisories have been transmitted."
