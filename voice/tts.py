@@ -37,14 +37,13 @@ def synthesize_speech(
 
     try:
         from gtts import gTTS
-        # If the specific language isn't directly supported by gTTS, fall back gracefully to 'en'
         try:
-            tts = gTTS(text=clean_text, lang=tts_lang, slow=False)
+            tts = gTTS(text=clean_text, lang=tts_lang, slow=False, lang_check=True)
             buffer = io.BytesIO()
             tts.write_to_fp(buffer)
             audio_bytes = buffer.getvalue()
         except Exception:
-            # Fallback to English TTS if dialect voice is unreachable
+            # Fallback to English TTS voice for non-supported dialects
             tts = gTTS(text=clean_text, lang="en", slow=False)
             buffer = io.BytesIO()
             tts.write_to_fp(buffer)
