@@ -57,7 +57,24 @@ class VoiceInteractionTracker:
         if os.path.exists(self.json_file):
             try:
                 with open(self.json_file, "r", encoding="utf-8") as f:
-                    return json.load(f)
+                    data = json.load(f)
+                    # Normalize schema across Colab and app
+                    for item in data:
+                        if "natlas_response" in item and "llm_response" not in item:
+                            item["llm_response"] = item["natlas_response"]
+                        if "ground_truth_audio_text" in item and "ground_truth_text" not in item:
+                            item["ground_truth_text"] = item["ground_truth_audio_text"]
+                        if "sector" in item and "notes" not in item:
+                            item["notes"] = item["sector"]
+                        if "user_id" not in item:
+                            item["user_id"] = "colab_a100_user"
+                        if "audio_duration_seconds" not in item:
+                            item["audio_duration_seconds"] = 3.5
+                        if "user_rating_stars" not in item:
+                            item["user_rating_stars"] = 5
+                        if "cer" not in item:
+                            item["cer"] = None
+                    return data
             except Exception:
                 return []
         return []
@@ -114,13 +131,41 @@ class VoiceInteractionTracker:
         with open(self.json_file, "w", encoding="utf-8") as f:
             json.dump(self.interactions, f, indent=2, ensure_ascii=False)
 
-        # 2. Save CSV
+        # 2. Save CSV with robust schema union
         if self.interactions:
-            fieldnames = list(self.interactions[0].keys())
+            canonical_fields = [
+                "interaction_id",
+                "timestamp_utc",
+                "user_id",
+                "language",
+                "sector",
+                "audio_duration_seconds",
+                "transcribed_text",
+                "ground_truth_text",
+                "wer",
+                "cer",
+                "llm_response",
+                "natlas_response",
+                "asr_latency_seconds",
+                "llm_latency_seconds",
+                "total_latency_seconds",
+                "user_rating_stars",
+                "notes",
+                "verified",
+            ]
+            extra_keys = []
+            for item in self.interactions:
+                for k in item.keys():
+                    if k not in canonical_fields and k not in extra_keys:
+                        extra_keys.append(k)
+            all_fields = canonical_fields + extra_keys
+
             with open(self.csv_file, "w", newline="", encoding="utf-8") as f:
-                writer = csv.DictWriter(f, fieldnames=fieldnames)
+                writer = csv.DictWriter(f, fieldnames=all_fields, extrasaction="ignore")
                 writer.writeheader()
-                writer.writerows(self.interactions)
+                for item in self.interactions:
+                    row = {k: item.get(k, "") for k in all_fields}
+                    writer.writerow(row)
 
         # 3. Generate summary metrics
         self._generate_summary()

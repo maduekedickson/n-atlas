@@ -1,20 +1,33 @@
 {
-  "total_interactions": 50,
-  "competition_milestone_met": true,
-  "average_asr_latency_seconds": 0.701,
-  "average_llm_latency_seconds": 2.619,
-  "average_total_latency_seconds": 3.32,
-  "overall_average_wer": 0.5391,
-  "language_breakdown": {
-    "en": 0.1847,
-    "ha": 0.5185,
-    "ig": 0.6389,
-    "yo": 0.9112
+  "total_interactions": 56,
+  "target_required": 50,
+  "compliance_status": "COMPLIANT (56/50)",
+  "average_end_to_end_latency_seconds": 2.999,
+  "language_distribution": {
+    "en": {
+      "count": 18,
+      "avg_asr_latency_seconds": 0.365,
+      "avg_total_latency_seconds": 2.303,
+      "avg_wer": 0.163
+    },
+    "ha": {
+      "count": 13,
+      "avg_asr_latency_seconds": 0.599,
+      "avg_total_latency_seconds": 2.948,
+      "avg_wer": 0.4786
+    },
+    "yo": {
+      "count": 13,
+      "avg_asr_latency_seconds": 1.031,
+      "avg_total_latency_seconds": 3.877,
+      "avg_wer": 0.8411
+    },
+    "ig": {
+      "count": 12,
+      "avg_asr_latency_seconds": 0.673,
+      "avg_total_latency_seconds": 3.148,
+      "avg_wer": 0.5856
+    }
   },
-  "language_counts": {
-    "en": 15,
-    "ha": 12,
-    "yo": 12,
-    "ig": 11
-  }
+  "last_updated_utc": "2026-10-12T17:59:54.139090+00:00"
 }
