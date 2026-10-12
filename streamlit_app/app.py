@@ -83,6 +83,47 @@ from voice.evaluation import VoiceInteractionTracker
 from voice.preprocessing import extract_audio_features, load_audio_from_bytes, to_wav_bytes
 from voice.tts import synthesize_speech
 from models.natlas import NATLaSLLMManager
+import streamlit.components.v1 as components
+
+
+def render_browser_tts_button(text: str, language: str):
+    """Renders a browser Web Speech API button to pronounce African languages natively."""
+    clean_text = text.replace('"', '\\"').replace("'", "\\'").replace("\n", " ").replace("\r", "").strip()
+    lang_code_map = {
+        "en": "en-NG",
+        "ha": "ha-NG",
+        "yo": "yo-NG",
+        "ig": "ig-NG",
+    }
+    target_lang = lang_code_map.get(language.lower(), "en-US")
+    html_code = f"""
+    <div style="margin-top: 6px; margin-bottom: 8px;">
+        <button onclick="speakText()" style="
+            background: linear-gradient(135deg, #008751 0%, #00B074 100%);
+            color: white;
+            border: none;
+            border-radius: 6px;
+            padding: 7px 14px;
+            font-size: 0.82rem;
+            font-weight: 600;
+            cursor: pointer;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.25);
+        ">
+            🔊 Speak in Browser Voice ({language.upper()})
+        </button>
+        <script>
+        function speakText() {{
+            window.speechSynthesis.cancel();
+            const utterance = new SpeechSynthesisUtterance("{clean_text}");
+            utterance.lang = "{target_lang}";
+            utterance.rate = 0.95;
+            window.speechSynthesis.speak(utterance);
+        }}
+        </script>
+    </div>
+    """
+    components.html(html_code, height=45)
+
 
 # Initialize cached instances
 @st.cache_resource
@@ -201,6 +242,7 @@ with tabs[0]:
                 llm_result = llm_manager.generate(
                     prompt=transcript,
                     system_prompt=f"You are N-ATLaS, Nigeria's national AI assistant. Respond helpfully in {LANGUAGE_NAMES[language_choice]}.",
+                    language=language_choice,
                 )
                 llm_response = llm_result["text"]
                 llm_latency = llm_result["latency_seconds"]
@@ -246,6 +288,7 @@ with tabs[0]:
 
                 if resp_audio:
                     st.audio(resp_audio, format="audio/mp3")
+                render_browser_tts_button(llm_response, language=language_choice)
 
 # --- TAB 2: PRESET SCENARIOS ---
 with tabs[1]:
@@ -292,6 +335,7 @@ with tabs[1]:
                     llm_res = llm_manager.generate(
                         prompt=sc["text"],
                         system_prompt=f"You are N-ATLaS. Answer in {LANGUAGE_NAMES[sc['lang']]}.",
+                        language=sc["lang"],
                     )
                     resp_audio = synthesize_speech(llm_res["text"], language=sc["lang"])
 
@@ -313,6 +357,7 @@ with tabs[1]:
                 st.markdown(f"**N-ATLaS Response:** {llm_res['text']}")
                 if resp_audio:
                     st.audio(resp_audio, format="audio/mp3")
+                render_browser_tts_button(llm_res["text"], language=sc["lang"])
 
 # --- TAB 3: AUDIT & BENCHMARK LOG ---
 with tabs[2]:

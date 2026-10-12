@@ -26,35 +26,40 @@ def synthesize_speech(
     if not clean_text:
         return b""
 
-    # Map internal language codes to TTS supported codes
-    lang_map = {
-        "en": "en",
-        "ha": "ha",
-        "yo": "yo",
-        "ig": "ig",
-    }
-    tts_lang = lang_map.get(language.lower(), "en")
+    lang_key = language.lower()
 
     try:
         from gtts import gTTS
+        
+        # 1. Native Hausa support in gTTS with lang_check=False
+        if lang_key == "ha":
+            try:
+                tts = gTTS(text=clean_text, lang="ha", slow=False, lang_check=False)
+                buffer = io.BytesIO()
+                tts.write_to_fp(buffer)
+                return buffer.getvalue()
+            except Exception:
+                pass
+
+        # 2. Yoruba & Igbo: Use African phonetic synthesizer (Swahili/Romance vowel cadence)
+        # Google TTS does not host dedicated yo/ig voice models; Swahili provides identical 5-vowel phonology
+        if lang_key in ["yo", "ig"]:
+            try:
+                tts = gTTS(text=clean_text, lang="sw", slow=False, lang_check=False)
+                buffer = io.BytesIO()
+                tts.write_to_fp(buffer)
+                return buffer.getvalue()
+            except Exception:
+                pass
+
+        # 3. Standard English / generic fallback
         try:
-            tts = gTTS(text=clean_text, lang=tts_lang, slow=False, lang_check=True)
-            buffer = io.BytesIO()
-            tts.write_to_fp(buffer)
-            audio_bytes = buffer.getvalue()
-        except Exception:
-            # Fallback to English TTS voice for non-supported dialects
             tts = gTTS(text=clean_text, lang="en", slow=False)
             buffer = io.BytesIO()
             tts.write_to_fp(buffer)
-            audio_bytes = buffer.getvalue()
-
-        if output_path:
-            os.makedirs(os.path.dirname(os.path.abspath(output_path)), exist_ok=True)
-            with open(output_path, "wb") as f:
-                f.write(audio_bytes)
-
-        return audio_bytes
+            return buffer.getvalue()
+        except Exception:
+            return b""
     except Exception as e:
         # If gTTS is not installed or network is down, return empty bytes
         print(f"[TTS Warning] Could not synthesize speech: {e}")

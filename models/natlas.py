@@ -89,6 +89,7 @@ class NATLaSLLMManager:
         self,
         prompt: str,
         system_prompt: Optional[str] = None,
+        language: str = "en",
         max_new_tokens: int = 150,
         temperature: float = 0.7,
         top_p: float = 0.9,
@@ -132,7 +133,7 @@ class NATLaSLLMManager:
 
         # Fallback response for testing environments without 8B GPU VRAM
         latency = round(time.perf_counter() - t0, 3)
-        simulated_response = self._fallback_response(prompt)
+        simulated_response = self._fallback_response(prompt, language=language)
         return {
             "text": simulated_response,
             "tokens_generated": len(simulated_response.split()),
@@ -140,27 +141,28 @@ class NATLaSLLMManager:
             "is_simulated": True,
         }
 
-    def _fallback_response(self, prompt: str) -> str:
+    def _fallback_response(self, prompt: str, language: str = "en") -> str:
+        lang_key = language.lower()
         prompt_lower = prompt.lower()
-        if "malaria" in prompt_lower or "clinic" in prompt_lower or "test" in prompt_lower:
+
+        # Prioritize matching the user's selected language
+        if lang_key == "ha" or "ina bukatan" in prompt_lower or "magungunan" in prompt_lower or "kwari" in prompt_lower:
             return (
-                "Acknowledged. The request for malaria test kits and pediatric antibiotics has been logged "
-                "for the primary health care facility. Stock alerts have been transmitted."
+                "An karɓi rahoton ku na asibiti da amfanin gona. Mun rubuta buƙatar magungunan zazzabin cizon sauro "
+                "da alluran riga-kafi don cibiyar kiwon lafiya ta matakin farko."
             )
-        elif "hausa" in prompt_lower or "ina bukatan" in prompt_lower or "magungunan" in prompt_lower:
+        elif lang_key == "yo" or "ogun" in prompt_lower or "ibà" in prompt_lower or "ajẹsara" in prompt_lower or "agbado" in prompt_lower:
             return (
-                "An karɓi rahoton ku na asibiti. Mun rubuta buƙatar magungunan zazzabin cizon sauro da alluran riga-kafi "
-                "don cibiyar kiwon lafiya ta matakin farko."
+                "A ti gba ifitonilete rẹ silẹ nipa ile-iwosan ati eto agbe. A ti fi ẹsun ibeere fun awọn oogun "
+                "ati ajẹsara ranṣẹ si ẹka eto ilera agbegbe."
             )
-        elif "yoruba" in prompt_lower or "ogun" in prompt_lower or "ibà" in prompt_lower:
+        elif lang_key == "ig" or "ọgwụ" in prompt_lower or "ịba" in prompt_lower or "mgbochi" in prompt_lower or "ahụhụ" in prompt_lower:
             return (
-                "A ti gba ifitonilete rẹ silẹ. A ti fi ẹsun ibeere fun awọn oogun ati ajẹsara ranṣẹ si ẹka eto ilera."
-            )
-        elif "igbo" in prompt_lower or "ọgwụ" in prompt_lower or "ịba" in prompt_lower:
-            return (
-                "Anyị anabatala akụkọ gị. E tinyela arịrịọ maka ọgwụ ịba na ngwa ọgwụgwọ ndị ọzọ n'akwụkwọ ndekọ."
+                "Anyị anabatala akụkọ gị maka ahụike na ọrụ ugbo. E tinyela arịrịọ maka ọgwụ ịba na ngwa ọgwụgwọ "
+                "ndị ọzọ n'akwụkwọ ndekọ nlekọta obodo."
             )
         else:
             return (
-                "N-ATLaS has processed your multilingual voice query. The information has been recorded and verified."
+                "Acknowledged. The report has been received and logged for the primary health care facility. "
+                "Stock alerts and field surveillance advisories have been transmitted."
             )

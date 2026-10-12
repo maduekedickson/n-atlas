@@ -161,14 +161,24 @@ class NATLaSASRManager:
 
         if pipe is not None:
             try:
-                result = pipe({"raw": audio, "sampling_rate": sr})
+                whisper_supported = {"en": "english", "ha": "hausa", "yo": "yoruba"}
+                gen_kwargs = {"task": "transcribe"}
+                if lang_key in whisper_supported:
+                    gen_kwargs["language"] = whisper_supported[lang_key]
+
+                result = pipe({"raw": audio, "sampling_rate": sr}, generate_kwargs=gen_kwargs)
                 if isinstance(result, dict) and "text" in result:
                     transcription_text = result["text"].strip()
                 elif isinstance(result, list) and len(result) > 0 and "text" in result[0]:
                     transcription_text = result[0]["text"].strip()
             except Exception as e:
-                print(f"[ASR Error during inference]: {e}")
-                used_fallback = True
+                try:
+                    # Retry without language hint but forcing task='transcribe'
+                    result = pipe({"raw": audio, "sampling_rate": sr}, generate_kwargs={"task": "transcribe"})
+                    transcription_text = result["text"].strip() if isinstance(result, dict) else result[0]["text"].strip()
+                except Exception as e2:
+                    print(f"[ASR Error during inference]: {e2}")
+                    used_fallback = True
         else:
             used_fallback = True
 
