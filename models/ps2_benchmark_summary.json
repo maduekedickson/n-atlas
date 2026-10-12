@@ -1,0 +1,20 @@
+{
+  "total_interactions": 50,
+  "competition_milestone_met": true,
+  "average_asr_latency_seconds": 0.701,
+  "average_llm_latency_seconds": 2.619,
+  "average_total_latency_seconds": 3.32,
+  "overall_average_wer": 0.5391,
+  "language_breakdown": {
+    "en": 0.1847,
+    "ha": 0.5185,
+    "ig": 0.6389,
+    "yo": 0.9112
+  },
+  "language_counts": {
+    "en": 15,
+    "ha": 12,
+    "yo": 12,
+    "ig": 11
+  }
+}

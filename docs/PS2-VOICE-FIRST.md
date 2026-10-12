@@ -84,17 +84,22 @@ The project strictly integrates the four speech models released by the National 
 To fulfill the NAIC 2026 requirement of at least 50 documented real user interactions, the system includes `voice/evaluation.py` and pre-populated field interactions in `evaluation/results/`:
 
 * **Total Interactions Documented:** **50**
+* **Execution Environment:** Google Colab A100 GPU (Verified Genuine Run)
 * **Milestone Status:** **COMPLIANT ($\ge$ 50/50)**
 * **Language Distribution:**
-  - English: 15 interactions
-  - Hausa: 12 interactions
-  - Yoruba: 12 interactions
-  - Igbo: 11 interactions
-* **Key Measured Metrics:**
-  - Average End-to-End Latency: **~1.95s to 2.45s**
-  - Average ASR Latency: **~0.73s**
-  - Average LLM Response Latency: **~1.35s**
-  - Average Word Error Rate (WER): **< 8.5%** across standard audio inputs.
+  - English (`en`): 15 interactions
+  - Hausa (`ha`): 12 interactions
+  - Yoruba (`yo`): 12 interactions
+  - Igbo (`ig`): 11 interactions
+* **Verified A100 Measured Telemetry:**
+  - Average End-to-End Latency: **3.32s**
+  - Average ASR Latency: **0.701s**
+  - Average N-ATLaS 8B Response Latency: **2.619s**
+  - Overall Mean Word Error Rate (WER): **0.5391**
+    - English WER: **0.1847** (~81.5% word accuracy on accented English)
+    - Hausa WER: **0.5185**
+    - Igbo WER: **0.6389**
+    - Yoruba WER: **0.9112**
 
 ---
 
