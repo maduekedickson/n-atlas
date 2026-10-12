@@ -337,11 +337,54 @@ with tabs[2]:
             "total_latency_seconds",
             "user_id",
         ]
-        table_data = [
-            {col: item.get(col, "") for col in display_cols}
-            for item in tracker.interactions
-        ]
-        st.dataframe(table_data, use_container_width=True)
+        # Render styled, scrollable audit table (100% pandas-free)
+        header_html = """
+        <tr style="background-color: #1e2530; color: #a0aec0; border-bottom: 2px solid #2d3748;">
+            <th style="padding: 10px; text-align: left;">ID</th>
+            <th style="padding: 10px; text-align: left;">Time (UTC)</th>
+            <th style="padding: 10px; text-align: center;">Lang</th>
+            <th style="padding: 10px; text-align: left;">Transcribed Voice</th>
+            <th style="padding: 10px; text-align: left;">N-ATLaS Response</th>
+            <th style="padding: 10px; text-align: center;">Latency</th>
+            <th style="padding: 10px; text-align: left;">User</th>
+        </tr>
+        """
+        rows_html = []
+        for item in tracker.interactions:
+            lang = item.get("language", "en")
+            badge_color = {
+                "en": "#3182ce",
+                "ha": "#2f855a",
+                "yo": "#d69e2e",
+                "ig": "#c53030",
+            }.get(lang, "#4a5568")
+            time_str = item.get("timestamp_utc", "")[:19].replace("T", " ")
+            row = f"""
+            <tr style="border-bottom: 1px solid #2d3748; background-color: #141820;">
+                <td style="padding: 8px; font-weight: 600; color: #63b3ed;">{item.get('interaction_id', '')}</td>
+                <td style="padding: 8px; font-size: 0.8rem; color: #a0aec0;">{time_str}</td>
+                <td style="padding: 8px; text-align: center;"><span style="background-color: {badge_color}; color: white; padding: 2px 6px; border-radius: 4px; font-size: 0.75rem;">{lang.upper()}</span></td>
+                <td style="padding: 8px; max-width: 250px;">{item.get('transcribed_text', '')}</td>
+                <td style="padding: 8px; max-width: 320px; color: #cbd5e0;">{item.get('llm_response', '')}</td>
+                <td style="padding: 8px; text-align: center; color: #48bb78; font-weight: 600;">{item.get('total_latency_seconds', '')}s</td>
+                <td style="padding: 8px; font-size: 0.8rem; color: #718096;">{item.get('user_id', '')}</td>
+            </tr>
+            """
+            rows_html.append(row)
+
+        full_table_html = f"""
+        <div style="max-height: 480px; overflow-y: auto; border: 1px solid #2d3748; border-radius: 8px; margin-bottom: 16px;">
+            <table style="width: 100%; border-collapse: collapse; font-size: 0.86rem; color: #e2e8f0;">
+                <thead style="position: sticky; top: 0; z-index: 1;">
+                    {header_html}
+                </thead>
+                <tbody>
+                    {''.join(rows_html)}
+                </tbody>
+            </table>
+        </div>
+        """
+        st.markdown(full_table_html, unsafe_allow_html=True)
 
         # Download Buttons for Submission Dossier
         d_col1, d_col2 = st.columns(2)
