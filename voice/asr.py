@@ -98,8 +98,23 @@ class NATLaSASRManager:
             self._loaded_pipelines[lang_key] = pipe
             return pipe
         except Exception as e:
-            print(f"[ASR Warning] Unable to load Hugging Face pipeline for '{model_id}': {e}")
-            return None
+            print(f"[ASR Warning] Unable to load '{model_id}' (Reason: {e}).")
+            print(f"[ASR Info] Falling back to base architecture 'openai/whisper-small'...")
+            try:
+                import torch
+                from transformers import pipeline
+                torch_dtype = torch.float16 if self.device == "cuda" else torch.float32
+                pipe = pipeline(
+                    "automatic-speech-recognition",
+                    model="openai/whisper-small",
+                    torch_dtype=torch_dtype,
+                    device=self.device,
+                )
+                self._loaded_pipelines[lang_key] = pipe
+                return pipe
+            except Exception as ex:
+                print(f"[ASR Error] Fallback to openai/whisper-small also failed: {ex}")
+                return None
 
     def transcribe(
         self,
